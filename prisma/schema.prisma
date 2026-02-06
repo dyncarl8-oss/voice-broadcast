@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model Post {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   creatorId String
   title     String?
   content   String
@@ -21,15 +21,16 @@ model Post {
 }
 
 model VoiceProfile {
-  creatorId       String   @id
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  creatorId       String   @unique
   fishVoiceId     String?
   consentAccepted Boolean  @default(false)
   updatedAt       DateTime @updatedAt
 }
 
 model AudioSummary {
-  id        String   @id @default(cuid())
-  postId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   audioUrl  String
   duration  Int      // In seconds
@@ -40,8 +41,8 @@ model AudioSummary {
 }
 
 model Broadcast {
-  id              String   @id @default(cuid())
-  postId          String
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId          String   @db.ObjectId
   post            Post     @relation(fields: [postId], references: [id])
   sentAt          DateTime @default(now())
   audienceType    String   // "ALL_COMPANY" or "PRODUCT_SCOPED"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { createPost } from "./actions";
+import { createPost } from "../actions";
 import { Loader2, Send } from "lucide-react";
 
 export function CreatePostForm() {
