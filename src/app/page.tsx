@@ -41,9 +41,9 @@ export default async function RootPage() {
 
     // Fallback if we can't detect automatically
     // We'll check if the user is an admin of ANY company
-    const companies = await whopsdk.companies.listCompanies({ userId });
+    const { data: companies } = await whopsdk.authorizedUsers.list({ user_id: userId });
 
-    if (companies.length > 0) {
+    if (companies && companies.length > 0) {
       redirect("/admin");
     } else {
       redirect("/member");
