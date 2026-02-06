@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  creatorId String
+  title     String?
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  summaries AudioSummary[]
+  broadcasts Broadcast[]
+
+  @@index([creatorId])
+}
+
+model VoiceProfile {
+  creatorId       String   @id
+  fishVoiceId     String?
+  consentAccepted Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+}
+
+model AudioSummary {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  audioUrl  String
+  duration  Int      // In seconds
+  script    String
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
+model Broadcast {
+  id              String   @id @default(cuid())
+  postId          String
+  post            Post     @relation(fields: [postId], references: [id])
+  sentAt          DateTime @default(now())
+  audienceType    String   // "ALL_COMPANY" or "PRODUCT_SCOPED"
+  targetProductId String?  // Optional, if audienceType is PRODUCT_SCOPED
+  totalRecipients Int
+
+  @@index([postId])
+}

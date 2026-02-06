@@ -1,52 +1,63 @@
-import { headers } from "next/headers";
-import { verifyUserToken, isMemberOfResource } from "@/lib/whop";
-import { MemberExperience } from "@/components/views/member-experience";
+import prisma from "@/lib/prisma";
+import { MessageSquare, Mic2, Clock } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export default async function MemberFeed() {
+    const posts = await prisma.post.findMany({
+        include: {
+            summaries: {
+                orderBy: { createdAt: 'desc' },
+                take: 1
+            }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
 
-export default async function MemberPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ experienceId?: string, bizId?: string }>;
-}) {
-    console.log("[Member Page] Request received");
-    const headerList = await headers();
-    const { experienceId: queryExpId, bizId: queryBizId } = await searchParams;
-
-    const headerExpId = headerList.get("x-whop-experience-id");
-    const headerBizId = headerList.get("x-whop-biz-id");
-
-    const experienceId = headerExpId || queryExpId;
-    const bizId = headerBizId || queryBizId;
-
-    console.log(`[Member Page] Context identification - ExpHeader: ${headerExpId}, ExpQuery: ${queryExpId}, BizHeader: ${headerBizId}, BizQuery: ${queryBizId}`);
-
-    const auth = await verifyUserToken();
-    if (!auth) {
-        console.error("[Member Page] Authentication failed");
-        return <div className="p-6 text-center">Invalid session. Please refresh Whop.</div>;
-    }
-
-    const resourceId = experienceId || bizId;
-
-    if (!resourceId) {
-        console.error("[Member Page] MISSING context/resourceId");
-        return (
-            <div className="flex min-h-screen items-center justify-center p-6 text-center">
-                <div>
-                    <h1 className="text-2xl font-bold mb-2">Context Required</h1>
-                    <p className="text-muted-foreground">Please access this page from your Whop community or dashboard.</p>
-                </div>
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Your Feed</h2>
             </div>
-        );
-    }
 
-    const isMember = await isMemberOfResource(resourceId, auth.userId);
-    if (!isMember) {
-        console.warn(`[Member Page] Access denied for user ${auth.userId} on resource ${resourceId}`);
-        return <div className="p-6 text-center text-red-600">Access denied. You do not have permission for this resource.</div>;
-    }
+            <div className="space-y-6">
+                {posts.length === 0 ? (
+                    <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+                        <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p>No updates from the creator yet.</p>
+                    </div>
+                ) : (
+                    posts.map((post) => (
+                        <div key={post.id} className="bg-white rounded-xl border shadow-sm overflow-hidden text-black">
+                            <div className="p-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xl font-bold text-gray-900">{post.title || "Untitled Post"}</h3>
+                                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {new Date(post.createdAt).toLocaleDateString()}
+                                    </span>
+                                </div>
 
-    console.log("[Member Page] Rendering Experience");
-    return <MemberExperience experienceId={resourceId} userId={auth.userId} />;
+                                <div className="prose max-w-none text-gray-700 whitespace-pre-wrap">
+                                    {post.content}
+                                </div>
+
+                                {post.summaries.length > 0 && (
+                                    <div className="mt-6 bg-indigo-50 p-4 rounded-lg border border-indigo-100 space-y-3">
+                                        <div className="flex items-center gap-2 text-indigo-900 font-semibold text-sm">
+                                            <Mic2 className="w-4 h-4" />
+                                            Listen to Voice Summary
+                                        </div>
+                                        <audio
+                                            controls
+                                            className="w-full h-8"
+                                            src={post.summaries[0].audioUrl}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
 }

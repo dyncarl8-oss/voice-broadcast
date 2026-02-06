@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "voice-broadcast",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,17 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@whop/react": "^0.3.2",
-    "@whop/sdk": "^0.0.26",
+    "@prisma/client": "^7.3.0",
+    "@whop-sdk/core": "^1.0.0",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.563.0",
-    "mongoose": "^9.1.6",
     "next": "16.1.6",
-    "postgres": "^3.4.8",
+    "openai": "^6.18.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "tailwind-merge": "^3.4.0"
+    "react-hook-form": "^7.71.1",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

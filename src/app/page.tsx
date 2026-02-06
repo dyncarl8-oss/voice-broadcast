@@ -1,68 +1,61 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { verifyUserToken, isAdminOfCompany, isMemberOfResource } from "@/lib/whop";
+import { whopsdk } from "@/lib/whop";
 
-export const dynamic = "force-dynamic";
+export default async function RootPage() {
+  const head = await headers();
 
-export default async function Home() {
-  console.log("[Root Path] Request received");
-  const headerList = await headers();
+  // Whop passes bizId for Dashboard View and experienceId for Experience View
+  // These are often in the query params, but during SSR we can check headers or just wait for the view-specific routes
 
-  // Log all whop-related headers
-  const headersLog = {
-    token: headerList.get("x-whop-user-token") ? "PRESENT" : "MISSING",
-    bizId: headerList.get("x-whop-biz-id"),
-    experienceId: headerList.get("x-whop-experience-id"),
-  };
-  console.log("[Root Path] Headers:", JSON.stringify(headersLog));
+  // In a real Whop app, the entry point might be different depending on how it's configured in the developer portal.
+  // Usually, Dashboard View points to /admin and Experience View points to /
 
-  const auth = await verifyUserToken();
-  const bizId = headerList.get("x-whop-biz-id");
-  const experienceId = headerList.get("x-whop-experience-id");
+  // Let's try to verify the token first
+  try {
+    const { userId } = await whopsdk.verifyUserToken(head);
 
-  if (!auth) {
-    console.warn("[Root Path] No authentication found, showing landing");
-    return (
-      <div className="flex min-h-screen items-center justify-center p-6 text-center">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Voice Broadcast for Whop</h1>
-          <p className="text-muted-foreground">Please access this app through your Whop Dashboard or community.</p>
+    if (!userId) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <h1 className="text-2xl font-bold">Authentication Required</h1>
+          <p className="text-gray-600">Please open this app inside Whop.</p>
         </div>
+      );
+    }
+
+    // We can try to detect the context by looking at the search params if they were passed,
+    // but in Next.js App Router root page, we don't have them in 'headers' directly unless we use middleware or pass them.
+
+    // However, we can use the 'whop' headers if they are available
+    const bizId = head.get("x-whop-biz-id");
+    const experienceId = head.get("x-whop-experience-id");
+
+    if (bizId) {
+      redirect("/admin");
+    }
+
+    if (experienceId) {
+      redirect("/member");
+    }
+
+    // Fallback if we can't detect automatically
+    // We'll check if the user is an admin of ANY company
+    const companies = await whopsdk.companies.listCompanies({ userId });
+
+    if (companies.length > 0) {
+      redirect("/admin");
+    } else {
+      redirect("/member");
+    }
+
+  } catch (error) {
+    console.error("Auth error:", error);
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <h1 className="text-2xl font-bold">Session Expired</h1>
+        <p className="text-gray-600">Please refresh the page or re-open the app in Whop.</p>
       </div>
     );
   }
-
-  // 1. Are they an Admin of the business?
-  if (bizId) {
-    const isAdmin = await isAdminOfCompany(bizId, auth.userId);
-    if (isAdmin) {
-      console.log("[Root Path] Redirecting ADMIN to /admin");
-      redirect(`/admin?bizId=${bizId}`);
-    }
-  }
-
-  // 2. Are they a Member of this business or experience?
-  if (experienceId) {
-    const isMember = await isMemberOfResource(experienceId, auth.userId);
-    if (isMember) {
-      console.log("[Root Path] Redirecting MEMBER to /member (Experience Context)");
-      redirect(`/member?experienceId=${experienceId}`);
-    }
-  }
-
-  if (bizId) {
-    const isMember = await isMemberOfResource(bizId, auth.userId);
-    if (isMember) {
-      console.log("[Root Path] Redirecting MEMBER to /member (Business Context)");
-      redirect(`/member?bizId=${bizId}`);
-    }
-  }
-
-  console.warn("[Root Path] Access restricted for user:", auth.userId);
-  return (
-    <div className="p-6 text-center">
-      <h2 className="text-xl font-bold">Access Restricted</h2>
-      <p className="text-muted-foreground">You don't have permission to view this app in this context.</p>
-    </div>
-  );
 }
