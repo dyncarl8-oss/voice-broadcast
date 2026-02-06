@@ -1,0 +1,331 @@
+Project Name: (temporary) Voice Broadcast for Whop
+Tech Stack: Next.js 14 (App Router), React, TypeScript, Tailwind CSS, Server Actions, Whop API, Fish Audio API
+
+ROLE & OBJECTIVE
+
+You are a senior full-stack engineer and product architect.
+
+Your task is to build a Whop App that allows creators/admins to:
+
+Post text updates normally inside the app
+
+Display the full original post to members
+
+Optionally generate an AI-summarized voice version using the creator’s cloned voice
+
+Send that voice summary via Whop DM to only the eligible members (company or product scoped)
+
+This app does NOT replace posts.
+It adds an optional audio broadcast layer controlled by the creator.
+
+CORE PRODUCT PRINCIPLES
+
+Creator control first
+Nothing is auto-sent. Every broadcast is opt-in.
+
+Members never lose original context
+The full post is always visible inside the app.
+
+Zero spam tolerance
+Cooldowns, previews, and opt-outs are mandatory.
+
+Voice authenticity & consent
+Voice cloning requires explicit creator consent.
+
+USER ROLES
+1. Creator / Admin
+
+Creates posts
+
+Sees full posts in dashboard
+
+Clicks “Send Voice Summary” manually
+
+Controls voice, length, and audience
+
+2. Member
+
+Sees full posts inside app
+
+Receives optional audio DMs
+
+Can mute or opt out
+
+CORE FEATURES (MANDATORY)
+1. Post Creation & Display
+
+Creators can post:
+
+Title (optional)
+
+Body (rich text or markdown)
+
+Tags (optional)
+
+Posts are displayed unchanged to members
+
+Posts are never modified by AI
+
+2. “Send Voice Summary” Action (Admin-Only)
+
+Each post has an admin-only button:
+
+Button:
+
+🎙️ Send Voice Summary to Members
+
+Clicking opens a modal with:
+
+AI summary preview (editable)
+
+Voice selection (creator’s cloned voice)
+
+Length selector:
+
+Ultra-short (15–20 sec)
+
+Standard (30–45 sec)
+
+Audience selector:
+
+All company members
+
+Specific product subscribers
+
+Send confirmation
+
+Nothing is sent without explicit confirmation.
+
+3. AI Summarization Engine
+
+Input:
+
+Original post content
+
+Creator tone profile (optional)
+
+Selected summary length
+
+Output rules:
+
+Spoken-friendly
+
+No emojis
+
+No bullet points
+
+Casual but clear
+
+No new info added
+
+No financial advice phrasing unless original post had it
+
+Summarization Prompt (FINAL)
+You are summarizing a creator’s post for a spoken audio update.
+
+Rules:
+- Preserve the creator’s intent and tone
+- Do NOT add new information
+- Do NOT exaggerate
+- Do NOT use emojis or bullet points
+- Write in natural spoken language
+- No disclaimers unless present in original text
+- Avoid hype or clickbait
+- Keep it concise and clear
+
+Length:
+- Ultra-short: 15–20 seconds
+- Standard: 30–45 seconds
+
+Original Post:
+{{POST_CONTENT}}
+
+Return ONLY the spoken script.
+
+4. Voice Generation (Fish Audio)
+
+Each creator:
+
+Uploads voice samples once
+
+Explicitly agrees to voice cloning
+
+Store:
+
+creator_voice_id
+
+Generate MP3 from summary text
+
+Cache generated audio per post
+
+If voice is unavailable:
+
+Fallback to neutral system voice
+
+Or disable sending
+
+5. Whop DM Delivery
+
+DM sent only after admin confirmation
+
+DM content:
+
+Short text intro
+
+Audio player or link
+
+Link back to full post inside app
+
+Example DM copy:
+
+New update from {{CreatorName}}
+Quick audio summary below 👇
+Full post available in the app.
+
+6. Spam & Safety Controls
+
+Mandatory safeguards:
+
+Max broadcasts per creator per day
+
+Minimum time between sends
+
+Preview before send
+
+Member opt-out toggle
+
+Admin resend lock (no duplicates)
+
+7. Member Preferences
+
+Members can:
+
+Mute all voice summaries
+
+Mute specific creators
+
+Switch to text-only notifications
+
+8. Analytics Dashboard (Creators)
+
+Show:
+
+DMs sent
+
+Opens
+
+Audio play rate
+
+Avg listen duration
+
+TECHNICAL ARCHITECTURE
+Frontend
+
+Next.js 14 App Router
+
+React + TypeScript
+
+Tailwind CSS
+
+Server Components for posts
+
+Client Components for modals/audio
+
+Backend
+
+Next.js Server Actions
+
+Whop API (auth, DMs, membership)
+
+Fish Audio API
+
+AI model API (summarization)
+
+Database Models (Example)
+Post {
+  id
+  creatorId
+  title
+  content
+  createdAt
+}
+
+VoiceProfile {
+  creatorId
+  fishVoiceId
+  consentAccepted
+}
+
+AudioSummary {
+  postId
+  audioUrl
+  duration
+  createdAt
+}
+
+Broadcast {
+  postId
+  sentAt
+  audienceType
+  totalRecipients
+}
+
+Security & Compliance
+
+Voice consent required before generation
+
+Delete voice on creator request
+
+Never auto-send messages
+
+No training on creator data
+
+UX REQUIREMENTS
+
+Fast
+
+Minimal clicks
+
+No dark patterns
+
+Clear “this will DM members” warnings
+
+MVP SCOPE (DO NOT OVERBUILD)
+
+MVP includes:
+
+Post display
+
+Manual voice summary sending
+
+One voice per creator
+
+Basic analytics
+
+Exclude:
+
+Auto scheduling
+
+Auto posting
+
+Public feeds
+
+SUCCESS METRICS
+
+% of posts with voice summaries
+
+Member listen rate
+
+Creator retention
+
+Reduced unread announcements
+
+FINAL RULE
+
+This app must feel like:
+
+“A premium broadcast tool for serious creators”
+
+Not a gimmick.
+Not spammy.
+Not automatic.
