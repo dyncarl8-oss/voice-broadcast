@@ -1,4 +1,5 @@
 import Whop from "@whop/sdk";
+import { verifyUserToken as baseVerifyUserToken } from "@whop/sdk/lib/verify-user-token";
 import { headers } from "next/headers";
 
 export const whop = new Whop({
@@ -9,7 +10,6 @@ export const whop = new Whop({
 /**
  * Robustly verify the user token.
  * Can take a token directly or automatically extract from headers.
- * Following whop-dev skill best practices.
  */
 export const verifyUserToken = async (tokenInput?: string) => {
     try {
@@ -22,8 +22,8 @@ export const verifyUserToken = async (tokenInput?: string) => {
 
         if (!token) return null;
 
-        const result = await whop.validateUserToken({
-            token,
+        const result = await baseVerifyUserToken(token, {
+            appId: process.env.WHOP_APP_ID!,
         });
 
         return result;
@@ -38,6 +38,7 @@ export const verifyUserToken = async (tokenInput?: string) => {
  */
 export const checkAccess = async (resourceId: string, userId: string) => {
     try {
+        // resourceId can be biz_xxx, exp_xxx etc
         const result = await whop.users.checkAccess(resourceId, { id: userId });
         return {
             has_access: result.has_access,
