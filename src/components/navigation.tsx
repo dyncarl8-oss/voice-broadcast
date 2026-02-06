@@ -12,22 +12,24 @@ function cn(...inputs: ClassValue[]) {
 
 interface NavigationProps {
     role: "admin" | "member";
+    companyId?: string;
+    experienceId?: string;
 }
 
-export function Navigation({ role }: NavigationProps) {
+export function Navigation({ role, companyId, experienceId }: NavigationProps) {
     const pathname = usePathname();
 
     const adminLinks = [
-        { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        { name: "Create Post", href: "/admin/posts/new", icon: PenSquare },
-        { name: "Voice Profiles", href: "/admin/voice", icon: Mic2 },
-        { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-        { name: "Settings", href: "/admin/settings", icon: Settings },
+        { name: "Dashboard", href: `/dashboard/${companyId || ''}`, icon: LayoutDashboard },
+        { name: "Create Post", href: `/dashboard/${companyId || ''}/posts/new`, icon: PenSquare },
+        { name: "Voice Profiles", href: `/dashboard/${companyId || ''}/voice`, icon: Mic2 },
+        { name: "Analytics", href: `/dashboard/${companyId || ''}/analytics`, icon: BarChart3 },
+        { name: "Settings", href: `/dashboard/${companyId || ''}/settings`, icon: Settings },
     ];
 
     const memberLinks = [
-        { name: "Feed", href: "/member", icon: LayoutDashboard },
-        { name: "Settings", href: "/member/settings", icon: Settings },
+        { name: "Feed", href: `/experiences/${experienceId || ''}`, icon: LayoutDashboard },
+        { name: "Settings", href: `/experiences/${experienceId || ''}/settings`, icon: Settings },
     ];
 
     const links = role === "admin" ? adminLinks : memberLinks;
