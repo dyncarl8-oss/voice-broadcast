@@ -9,11 +9,18 @@ export default async function MemberLayout({
 }) {
     const head = await headers();
 
+    console.log("MemberLayout hit:", {
+        experienceId: head.get("x-whop-experience-id"),
+        userId: head.get("x-whop-user-id"),
+        authHeader: !!head.get("authorization")
+    });
+
     try {
         const { userId } = await whopsdk.verifyUserToken(head);
         const experienceId = head.get("x-whop-experience-id");
 
         if (!userId) {
+            console.log("MemberLayout: No userId after verification, redirecting to /");
             redirect("/");
         }
 
@@ -40,6 +47,13 @@ export default async function MemberLayout({
             </div>
         );
     } catch (error) {
-        redirect("/");
+        console.error("Whop authentication error in MemberLayout:", error);
+        return (
+            <div className="flex items-center justify-center min-h-screen p-4 flex-col text-center">
+                <p className="text-red-500 font-semibold text-lg">Member Authentication failed.</p>
+                <p className="text-gray-500 text-sm mt-2">Error: {String(error)}</p>
+                <a href="/" className="mt-4 text-indigo-600 underline">Try returning home</a>
+            </div>
+        );
     }
 }

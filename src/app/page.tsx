@@ -11,11 +11,19 @@ export default async function RootPage() {
   // In a real Whop app, the entry point might be different depending on how it's configured in the developer portal.
   // Usually, Dashboard View points to /admin and Experience View points to /
 
-  // Let's try to verify the token first
+  console.log("RootPage hit:", {
+    bizId: head.get("x-whop-biz-id"),
+    experienceId: head.get("x-whop-experience-id"),
+    userId: head.get("x-whop-user-id"),
+    authHeader: !!head.get("authorization")
+  });
+
   try {
     const { userId } = await whopsdk.verifyUserToken(head);
+    console.log("Verified User ID:", userId);
 
     if (!userId) {
+      console.log("No User ID found after verification");
       return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
           <h1 className="text-2xl font-bold">Authentication Required</h1>
@@ -24,37 +32,40 @@ export default async function RootPage() {
       );
     }
 
-    // We can try to detect the context by looking at the search params if they were passed,
-    // but in Next.js App Router root page, we don't have them in 'headers' directly unless we use middleware or pass them.
-
-    // However, we can use the 'whop' headers if they are available
     const bizId = head.get("x-whop-biz-id");
     const experienceId = head.get("x-whop-experience-id");
 
     if (bizId) {
+      console.log("Redirecting to /admin based on bizId");
       redirect("/admin");
     }
 
     if (experienceId) {
+      console.log("Redirecting to /member based on experienceId");
       redirect("/member");
     }
 
     // Fallback if we can't detect automatically
-    // We'll check if the user is an admin of ANY company
+    console.log("No specific context found, checking authorized companies...");
     const { data: companies } = await whopsdk.authorizedUsers.list({ user_id: userId });
 
     if (companies && companies.length > 0) {
+      console.log("User has admin companies, redirecting to /admin");
       redirect("/admin");
     } else {
+      console.log("User has no admin companies, redirecting to /member");
       redirect("/member");
     }
 
   } catch (error) {
-    console.error("Auth error:", error);
+    console.error("Auth error in RootPage:", error);
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <h1 className="text-2xl font-bold">Session Expired</h1>
-        <p className="text-gray-600">Please refresh the page or re-open the app in Whop.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
+        <h1 className="text-2xl font-bold text-red-600">Session Expired or Invalid</h1>
+        <p className="text-gray-600 mt-2">Please refresh the page or re-open the app in Whop.</p>
+        <pre className="mt-4 p-2 bg-gray-100 rounded text-xs text-left inline-block max-w-full overflow-auto">
+          {String(error)}
+        </pre>
       </div>
     );
   }

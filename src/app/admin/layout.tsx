@@ -10,11 +10,18 @@ export default async function AdminLayout({
 }) {
     const head = await headers();
 
+    console.log("AdminLayout hit:", {
+        bizId: head.get("x-whop-biz-id"),
+        userId: head.get("x-whop-user-id"),
+        authHeader: !!head.get("authorization")
+    });
+
     try {
         const { userId } = await whopsdk.verifyUserToken(head);
         const bizId = head.get("x-whop-biz-id");
 
         if (!userId) {
+            console.log("AdminLayout: No userId after verification, redirecting to /");
             redirect("/");
         }
 
@@ -54,6 +61,15 @@ export default async function AdminLayout({
             </div>
         );
     } catch (error) {
-        redirect("/");
+        console.error("Whop authentication error in AdminLayout:", error);
+        // Avoid redirect loop if we are already at / and redirecting here
+        // If we came from /, and / redirects here based on headers, but we fail here, we MUST not redirect back to / if it will just loop
+        return (
+            <div className="flex items-center justify-center min-h-screen p-4 flex-col text-center">
+                <p className="text-red-500 font-semibold text-lg">Admin Authentication failed.</p>
+                <p className="text-gray-500 text-sm mt-2">Error: {String(error)}</p>
+                <a href="/" className="mt-4 text-indigo-600 underline">Try returning home</a>
+            </div>
+        );
     }
 }
