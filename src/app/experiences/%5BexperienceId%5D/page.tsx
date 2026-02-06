@@ -1,6 +1,5 @@
-import { db } from "@/db";
-import { posts, userPreferences } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import dbConnect from "@/lib/db/mongodb";
+import { Post } from "@/lib/db/models";
 import { PreferenceToggle } from "./preference-toggle";
 
 export const dynamic = "force-dynamic";
@@ -11,12 +10,8 @@ export default async function ExperiencePage({
     params: { experienceId: string };
 }) {
     // In a real app, we'd look up the companyId associated with this experienceId
-    // For MVP, we might assume a 1:1 or pass it in.
-    // We'll just fetch all posts for now or assume a specific context.
-
-    const allPosts = await db.query.posts.findMany({
-        orderBy: [desc(posts.createdAt)],
-    });
+    await dbConnect();
+    const allPosts = await Post.find().sort({ createdAt: -1 }).lean();
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -29,8 +24,8 @@ export default async function ExperiencePage({
             </header>
 
             <div className="grid gap-6">
-                {allPosts.map((post) => (
-                    <article key={post.id} className="bg-card border rounded-2xl p-6 shadow-sm">
+                {allPosts.map((post: any) => (
+                    <article key={post._id.toString()} className="bg-card border rounded-2xl p-6 shadow-sm">
                         <header className="mb-4">
                             <h2 className="text-xl font-bold">{post.title || "Announcement"}</h2>
                             <time className="text-xs text-muted-foreground">

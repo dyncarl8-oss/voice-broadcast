@@ -1,6 +1,5 @@
-import { db } from "@/db";
-import { posts } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import dbConnect from "@/lib/db/mongodb";
+import { Post } from "@/lib/db/models";
 import { CreatePostForm } from "./create-post-form";
 import { PostCard } from "./post-card";
 import { VoiceProfileSetup } from "./voice-profile-setup";
@@ -25,10 +24,10 @@ export default async function DashboardPage({
         return <div>Unauthorized. Please access via Whop Dashboard.</div>;
     }
 
-    const allPosts = await db.query.posts.findMany({
-        where: eq(posts.companyId, companyId),
-        orderBy: [desc(posts.createdAt)],
-    });
+    await dbConnect();
+    const allPosts = await Post.find({ companyId })
+        .sort({ createdAt: -1 })
+        .lean();
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -58,8 +57,8 @@ export default async function DashboardPage({
                     </div>
                 ) : (
                     <div className="grid gap-4">
-                        {allPosts.map((post) => (
-                            <PostCard key={post.id} post={post} />
+                        {allPosts.map((post: any) => (
+                            <PostCard key={post._id.toString()} post={{ ...post, id: post._id.toString() }} />
                         ))}
                     </div>
                 )}

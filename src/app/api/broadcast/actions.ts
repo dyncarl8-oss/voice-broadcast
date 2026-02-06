@@ -1,8 +1,7 @@
 "use server";
 
-import { whop } from "@/lib/whop";
-import { db } from "@/db";
-import { broadcasts, audioSummaries } from "@/db/schema";
+import dbConnect from "@/lib/db/mongodb";
+import { Post, AudioSummary, Broadcast } from "@/lib/db/models";
 import { summarizePost } from "@/lib/ai/summarize";
 import { generateAudio } from "@/lib/audio/fish-audio";
 
@@ -15,11 +14,10 @@ export async function sendVoiceBroadcast(params: {
     voiceId: string;
 }) {
     try {
-        // 1. Get post content
-        const post = await db.query.posts.findFirst({
-            where: (posts, { eq }) => eq(posts.id, params.postId),
-        });
+        await dbConnect();
 
+        // 1. Get post content
+        const post = await Post.findById(params.postId);
         if (!post) throw new Error("Post not found");
 
         // 2. Generate Summary
@@ -30,26 +28,24 @@ export async function sendVoiceBroadcast(params: {
         if (!audioResult) throw new Error("Audio generation failed");
 
         // 4. Save Audio Summary
-        const [summary] = await db.insert(audioSummaries).values({
+        const summary = await AudioSummary.create({
             postId: params.postId,
             audioUrl: audioResult.audioUrl,
             script,
             duration: audioResult.duration,
-            lengthType: params.length,
-        }).returning();
+        });
 
         // 5. Send DMs via Whop
         // This is a placeholder for the actual Whop API DM sending logic
-        // Using the whop SDK or fetch
         console.log(`Sending DMs to ${params.audience} audience...`);
 
         // 6. Record Broadcast
-        await db.insert(broadcasts).values({
+        await Broadcast.create({
             postId: params.postId,
-            audioSummaryId: summary.id,
-            audienceType: params.audience,
+            audioSummaryId: summary._id,
+            companyId: params.companyId,
+            targetAudience: params.audience,
             productIds: params.productIds || [],
-            totalRecipients: 100, // Mock number
         });
 
         return { success: true };

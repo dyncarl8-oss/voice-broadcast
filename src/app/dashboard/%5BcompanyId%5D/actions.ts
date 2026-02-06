@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/db";
-import { posts } from "@/db/schema";
+import dbConnect from "@/lib/db/mongodb";
+import { Post } from "@/lib/db/models";
 import { revalidatePath } from "next/cache";
 
 export async function createPost(formData: {
@@ -11,7 +11,8 @@ export async function createPost(formData: {
     companyId: string;
 }) {
     try {
-        await db.insert(posts).values({
+        await dbConnect();
+        await Post.create({
             title: formData.title,
             content: formData.content,
             creatorId: formData.creatorId,
