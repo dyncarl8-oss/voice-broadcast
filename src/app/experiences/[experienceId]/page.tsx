@@ -8,18 +8,22 @@ export default async function ExperienceCatchAll({
 }: {
     params: Promise<{ experienceId: string }>
 }) {
+    console.log("[Experience Catch-All] Request received");
     const { experienceId } = await params;
     const auth = await verifyUserToken();
 
     if (!auth) {
+        console.warn("[Experience Catch-All] No auth, redirecting to root");
         redirect("/");
     }
 
     const isMember = await isMemberOfResource(experienceId, auth.userId);
 
     if (isMember) {
-        redirect("/member");
+        console.log(`[Experience Catch-All] User ${auth.userId} HAS access, redirecting to clean /member`);
+        redirect(`/member?experienceId=${experienceId}`);
     }
 
+    console.warn(`[Experience Catch-All] User ${auth.userId} NO access, redirecting to root`);
     redirect("/");
 }

@@ -5,13 +5,23 @@ import { verifyUserToken, isAdminOfCompany, isMemberOfResource } from "@/lib/who
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const auth = await verifyUserToken();
+  console.log("[Root Path] Request received");
   const headerList = await headers();
+
+  // Log all whop-related headers
+  const headersLog = {
+    token: headerList.get("x-whop-user-token") ? "PRESENT" : "MISSING",
+    bizId: headerList.get("x-whop-biz-id"),
+    experienceId: headerList.get("x-whop-experience-id"),
+  };
+  console.log("[Root Path] Headers:", JSON.stringify(headersLog));
+
+  const auth = await verifyUserToken();
   const bizId = headerList.get("x-whop-biz-id");
   const experienceId = headerList.get("x-whop-experience-id");
 
-  // 1. No Auth? Show generic landing
   if (!auth) {
+    console.warn("[Root Path] No authentication found, showing landing");
     return (
       <div className="flex min-h-screen items-center justify-center p-6 text-center">
         <div>
@@ -22,32 +32,33 @@ export default async function Home() {
     );
   }
 
-  // 2. Are they an Admin of the business?
+  // 1. Are they an Admin of the business?
   if (bizId) {
     const isAdmin = await isAdminOfCompany(bizId, auth.userId);
     if (isAdmin) {
-      redirect("/admin");
+      console.log("[Root Path] Redirecting ADMIN to /admin");
+      redirect(`/admin?bizId=${bizId}`);
     }
   }
 
-  // 3. Are they a Member of this business or experience?
-  // Try Experience first if present
+  // 2. Are they a Member of this business or experience?
   if (experienceId) {
     const isMember = await isMemberOfResource(experienceId, auth.userId);
     if (isMember) {
-      redirect("/member");
+      console.log("[Root Path] Redirecting MEMBER to /member (Experience Context)");
+      redirect(`/member?experienceId=${experienceId}`);
     }
   }
 
-  // Use bizId as fallback if not admin
   if (bizId) {
     const isMember = await isMemberOfResource(bizId, auth.userId);
     if (isMember) {
-      redirect("/member");
+      console.log("[Root Path] Redirecting MEMBER to /member (Business Context)");
+      redirect(`/member?bizId=${bizId}`);
     }
   }
 
-  // 4. Default: Access Restricted
+  console.warn("[Root Path] Access restricted for user:", auth.userId);
   return (
     <div className="p-6 text-center">
       <h2 className="text-xl font-bold">Access Restricted</h2>

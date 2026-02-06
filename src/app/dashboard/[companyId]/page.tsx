@@ -8,19 +8,22 @@ export default async function DashboardCatchAll({
 }: {
     params: Promise<{ companyId: string }>
 }) {
+    console.log("[Dashboard Catch-All] Request received");
     const { companyId } = await params;
     const auth = await verifyUserToken();
 
     if (!auth) {
+        console.warn("[Dashboard Catch-All] No auth, redirecting to root");
         redirect("/");
     }
 
     const isAdmin = await isAdminOfCompany(companyId, auth.userId);
 
     if (isAdmin) {
-        redirect("/admin");
+        console.log(`[Dashboard Catch-All] User ${auth.userId} is ADMIN, redirecting to clean /admin`);
+        redirect(`/admin?bizId=${companyId}`);
     }
 
-    // If not admin, they must be a member or unauthorized
-    redirect("/member");
+    console.log(`[Dashboard Catch-All] User ${auth.userId} NOT primary admin, redirecting to /member`);
+    redirect(`/member?bizId=${companyId}`);
 }
