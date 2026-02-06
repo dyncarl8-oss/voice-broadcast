@@ -25,7 +25,7 @@ export default async function MemberFeed() {
                         <p>No updates from the creator yet.</p>
                     </div>
                 ) : (
-                    posts.map((post) => (
+                    posts.map((post: any) => (
                         <div key={post.id} className="bg-white rounded-xl border shadow-sm overflow-hidden text-black">
                             <div className="p-6 space-y-4">
                                 <div className="flex items-center justify-between">
