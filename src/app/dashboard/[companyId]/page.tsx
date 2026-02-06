@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { verifyUserToken, checkAccess } from "@/lib/whop";
+import { verifyUserToken, isAdminOfCompany } from "@/lib/whop";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +15,12 @@ export default async function DashboardCatchAll({
         redirect("/");
     }
 
-    const { has_access, access_level } = await checkAccess(companyId, auth.userId);
+    const isAdmin = await isAdminOfCompany(companyId, auth.userId);
 
-    if (has_access && access_level === "admin") {
+    if (isAdmin) {
         redirect("/admin");
     }
 
-    // If not admin, maybe they should go to member view of this company?
+    // If not admin, they must be a member or unauthorized
     redirect("/member");
 }

@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { verifyUserToken, checkAccess } from "@/lib/whop";
+import { verifyUserToken, isAdminOfCompany, isMemberOfResource } from "@/lib/whop";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export default async function Home() {
   const bizId = headerList.get("x-whop-biz-id");
   const experienceId = headerList.get("x-whop-experience-id");
 
-  // If no token or verification fails, show fallback
+  // 1. No Auth? Show generic landing
   if (!auth) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6 text-center">
@@ -22,31 +22,36 @@ export default async function Home() {
     );
   }
 
-  // 1. If we have bizId, check if they are an admin
+  // 2. Are they an Admin of the business?
   if (bizId) {
-    const access = await checkAccess(bizId, auth.userId);
-    if (access.access_level === "admin") {
+    const isAdmin = await isAdminOfCompany(bizId, auth.userId);
+    if (isAdmin) {
       redirect("/admin");
     }
   }
 
-  // 2. If we have experienceId, check if they have access
+  // 3. Are they a Member of this business or experience?
+  // Try Experience first if present
   if (experienceId) {
-    const access = await checkAccess(experienceId, auth.userId);
-    if (access.has_access) {
+    const isMember = await isMemberOfResource(experienceId, auth.userId);
+    if (isMember) {
       redirect("/member");
     }
   }
 
-  // 3. Fallback: If they reached here but we have context, try to find a sensible place
+  // Use bizId as fallback if not admin
   if (bizId) {
-    redirect("/member");
+    const isMember = await isMemberOfResource(bizId, auth.userId);
+    if (isMember) {
+      redirect("/member");
+    }
   }
 
+  // 4. Default: Access Restricted
   return (
     <div className="p-6 text-center">
       <h2 className="text-xl font-bold">Access Restricted</h2>
-      <p className="text-muted-foreground">You don't have permission to view this page.</p>
+      <p className="text-muted-foreground">You don't have permission to view this app in this context.</p>
     </div>
   );
 }

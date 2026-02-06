@@ -34,18 +34,39 @@ export const verifyUserToken = async (tokenInput?: string) => {
 };
 
 /**
- * Check access level for a specific resource (company, experience, or product)
+ * Check if the user is an admin of a company.
  */
-export const checkAccess = async (resourceId: string, userId: string) => {
+export const isAdminOfCompany = async (companyId: string, userId: string) => {
     try {
-        // resourceId can be biz_xxx, exp_xxx etc
-        const result = await whop.users.checkAccess(resourceId, { id: userId });
-        return {
-            has_access: result.has_access,
-            access_level: result.access_level,
-        };
+        const result = await whop.users.checkAccess(companyId, { id: userId });
+        return result.access_level === "admin";
     } catch (error) {
-        console.error(`Access check failed for ${resourceId}:`, error);
-        return { has_access: false, access_level: "no_access" };
+        console.error(`Admin check failed for ${companyId}:`, error);
+        return false;
+    }
+};
+
+/**
+ * Check if the user is a member/customer of a resource.
+ */
+export const isMemberOfResource = async (resourceId: string, userId: string) => {
+    try {
+        const result = await whop.users.checkAccess(resourceId, { id: userId });
+        return result.has_access;
+    } catch (error) {
+        console.error(`Member check failed for ${resourceId}:`, error);
+        return false;
+    }
+};
+
+/**
+ * Retrieve user details by ID.
+ */
+export const getWhopUser = async (userId: string) => {
+    try {
+        return await whop.users.retrieve(userId);
+    } catch (error) {
+        console.error(`Retrieve user failed for ${userId}:`, error);
+        return null;
     }
 };

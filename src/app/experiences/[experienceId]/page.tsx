@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { verifyUserToken, checkAccess } from "@/lib/whop";
+import { verifyUserToken, isMemberOfResource } from "@/lib/whop";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +15,9 @@ export default async function ExperienceCatchAll({
         redirect("/");
     }
 
-    const { has_access } = await checkAccess(experienceId, auth.userId);
+    const isMember = await isMemberOfResource(experienceId, auth.userId);
 
-    if (has_access) {
+    if (isMember) {
         redirect("/member");
     }
 
