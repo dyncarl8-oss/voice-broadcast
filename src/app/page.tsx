@@ -5,13 +5,13 @@ import { verifyUserToken, checkAccess } from "@/lib/whop";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const auth = await verifyUserToken();
   const headerList = await headers();
-  const token = headerList.get("x-whop-user-token");
   const bizId = headerList.get("x-whop-biz-id");
   const experienceId = headerList.get("x-whop-experience-id");
 
-  // If no token, we can't redirect with context
-  if (!token) {
+  // If no token or verification fails, show fallback
+  if (!auth) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6 text-center">
         <div>
@@ -20,11 +20,6 @@ export default async function Home() {
         </div>
       </div>
     );
-  }
-
-  const auth = await verifyUserToken(token);
-  if (!auth) {
-    return <div className="p-6 text-center">Invalid session. Please refresh Whop.</div>;
   }
 
   // 1. If we have bizId, check if they are an admin
@@ -43,8 +38,7 @@ export default async function Home() {
     }
   }
 
-  // 3. Fallback: If they are an admin of ANY company, try to find one? 
-  // For now, if bizId was provided but not admin, maybe they are a member
+  // 3. Fallback: If they reached here but we have context, try to find a sensible place
   if (bizId) {
     redirect("/member");
   }

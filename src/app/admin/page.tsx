@@ -6,10 +6,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
     const headerList = await headers();
-    const token = headerList.get("x-whop-user-token");
     const bizId = headerList.get("x-whop-biz-id");
 
-    if (!token || !bizId) {
+    if (!bizId) {
         return (
             <div className="flex min-h-screen items-center justify-center p-6 text-center">
                 <div>
@@ -20,7 +19,7 @@ export default async function AdminPage() {
         );
     }
 
-    const auth = await verifyUserToken(token);
+    const auth = await verifyUserToken();
     if (!auth) {
         return <div className="p-6 text-center">Invalid session. Please refresh Whop.</div>;
     }
