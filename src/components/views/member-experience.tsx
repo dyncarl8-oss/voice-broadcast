@@ -1,16 +1,17 @@
 import dbConnect from "@/lib/db/mongodb";
 import { Post } from "@/lib/db/models";
-import { PreferenceToggle } from "./preference-toggle";
-import { headers } from "next/headers";
+// Note: preference-toggle was in src/app/experience, might need to move it too
+import { PreferenceToggle } from "@/components/experience/preference-toggle";
 
-export const dynamic = "force-dynamic";
-
-export default async function ExperiencePage() {
-    const headerList = await headers();
-    const experienceId = headerList.get("x-whop-experience-id");
-
-    // In a real app, we'd look up the companyId associated with this experienceId
+export async function MemberExperience({
+    experienceId,
+    userId
+}: {
+    experienceId: string;
+    userId: string;
+}) {
     await dbConnect();
+    // In a real app, we'd filter posts by products associated with the experienceId
     const allPosts = await Post.find().sort({ createdAt: -1 }).lean();
 
     return (

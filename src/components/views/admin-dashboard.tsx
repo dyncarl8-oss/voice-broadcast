@@ -1,28 +1,17 @@
 import dbConnect from "@/lib/db/mongodb";
 import { Post } from "@/lib/db/models";
-import { CreatePostForm } from "./create-post-form";
-import { PostCard } from "./post-card";
-import { VoiceProfileSetup } from "./voice-profile-setup";
-import { AnalyticsDashboard } from "./analytics";
-import { headers } from "next/headers";
-import { verifyUserToken } from "@/lib/whop";
+import { CreatePostForm } from "@/components/dashboard/create-post-form";
+import { PostCard } from "@/components/dashboard/post-card";
+import { VoiceProfileSetup } from "@/components/dashboard/voice-profile-setup";
+import { AnalyticsDashboard } from "@/components/dashboard/analytics";
 
-export const dynamic = "force-dynamic";
-
-export default async function DashboardPage() {
-    const headerList = await headers();
-    const token = headerList.get("x-whop-user-token");
-    const bizId = headerList.get("x-whop-biz-id"); // Whop provides this in the iframe
-
-    const auth = token ? await verifyUserToken(token) : null;
-
-    if (!auth) {
-        return <div>Unauthorized. Please access via Whop Dashboard.</div>;
-    }
-
-    // Fallback to a mock or handle missing bizId if not in iframe
-    const companyId = bizId || "biz_default";
-
+export async function AdminDashboard({
+    companyId,
+    userId
+}: {
+    companyId: string;
+    userId: string;
+}) {
     await dbConnect();
     const allPosts = await Post.find({ companyId })
         .sort({ createdAt: -1 })
@@ -41,11 +30,11 @@ export default async function DashboardPage() {
 
             <section className="bg-card border rounded-xl p-6 shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Create New Post</h2>
-                <CreatePostForm companyId={companyId} creatorId={auth.userId} />
+                <CreatePostForm companyId={companyId} creatorId={userId} />
             </section>
 
             <section>
-                <VoiceProfileSetup creatorId={auth.userId} />
+                <VoiceProfileSetup creatorId={userId} />
             </section>
 
             <section className="space-y-4">
