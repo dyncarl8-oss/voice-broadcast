@@ -42,24 +42,24 @@ export default async function RootPage({
     }
 
     if (bizId) {
-      console.log("Redirecting to /admin based on bizId");
+      console.log("Redirecting to /admin based on detected bizId:", bizId);
       redirect(`/admin${queryString}`);
     }
 
     if (experienceId) {
-      console.log("Redirecting to /member based on experienceId");
+      console.log("Redirecting to /member based on detected experienceId:", experienceId);
       redirect(`/member${queryString}`);
     }
 
-    // Fallback if we can't detect automatically
+    // Fallback logic: Check if user is an admin for ANY company
     console.log("No specific context found, checking authorized companies...");
     const { data: companies } = await whopsdk.authorizedUsers.list({ user_id: userId });
 
     if (companies && companies.length > 0) {
-      console.log("User has admin companies, redirecting to /admin");
+      console.log(`User is an admin for ${companies.length} companies. Defaulting to /admin.`);
       redirect(`/admin${queryString}`);
     } else {
-      console.log("User has no admin companies, redirecting to /member");
+      console.log("User is not an admin. Defaulting to /member.");
       redirect(`/member${queryString}`);
     }
 

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { whopsdk } from "@/lib/whop";
+import { Navigation } from "@/components/navigation";
 
 export default async function MemberLayout({
     children,
@@ -38,8 +39,11 @@ export default async function MemberLayout({
 
         return (
             <div className="min-h-screen bg-gray-50">
-                <header className="h-16 bg-white border-b flex items-center px-8 shadow-sm">
+                <header className="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
                     <h1 className="text-lg font-bold text-indigo-600">Voice Broadcast</h1>
+                    <div className="flex items-center gap-4">
+                        <Navigation role="member" />
+                    </div>
                 </header>
                 <main className="max-w-4xl mx-auto p-6">
                     {children}
