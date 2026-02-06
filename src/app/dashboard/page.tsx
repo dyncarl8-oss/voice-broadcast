@@ -9,20 +9,19 @@ import { verifyUserToken } from "@/lib/whop";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage({
-    params,
-}: {
-    params: { companyId: string };
-}) {
-    const { companyId } = params;
-
+export default async function DashboardPage() {
     const headerList = await headers();
     const token = headerList.get("x-whop-user-token");
+    const bizId = headerList.get("x-whop-biz-id"); // Whop provides this in the iframe
+
     const auth = token ? await verifyUserToken(token) : null;
 
     if (!auth) {
         return <div>Unauthorized. Please access via Whop Dashboard.</div>;
     }
+
+    // Fallback to a mock or handle missing bizId if not in iframe
+    const companyId = bizId || "biz_default";
 
     await dbConnect();
     const allPosts = await Post.find({ companyId })

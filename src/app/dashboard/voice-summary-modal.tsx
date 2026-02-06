@@ -20,7 +20,7 @@ export function VoiceSummaryModal({ post, isOpen, onClose }: VoiceSummaryModalPr
     const handleSend = async () => {
         setLoading(true);
         const result = await sendVoiceBroadcast({
-            postId: post.id,
+            postId: post.id || post._id.toString(),
             companyId: post.companyId,
             length,
             audience,

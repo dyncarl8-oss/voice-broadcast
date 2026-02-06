@@ -18,7 +18,7 @@ export async function createPost(formData: {
             creatorId: formData.creatorId,
             companyId: formData.companyId,
         });
-        revalidatePath(`/dashboard/${formData.companyId}`);
+        revalidatePath(`/dashboard`);
         return { success: true };
     } catch (error) {
         console.error("Failed to create post:", error);

@@ -1,14 +1,14 @@
 import dbConnect from "@/lib/db/mongodb";
 import { Post } from "@/lib/db/models";
 import { PreferenceToggle } from "./preference-toggle";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-export default async function ExperiencePage({
-    params,
-}: {
-    params: { experienceId: string };
-}) {
+export default async function ExperiencePage() {
+    const headerList = await headers();
+    const experienceId = headerList.get("x-whop-experience-id");
+
     // In a real app, we'd look up the companyId associated with this experienceId
     await dbConnect();
     const allPosts = await Post.find().sort({ createdAt: -1 }).lean();
